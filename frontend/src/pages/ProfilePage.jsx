@@ -33,30 +33,25 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: '40px auto', fontFamily: 'system-ui' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+    <div className="page">
+      <div className="page-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ margin: 0 }}>Профиль</h1>
+          <h1 className="page-title">Профиль</h1>
           <Link to="/operations">Операции</Link>
         </div>
         <UserMenu username={me?.username} onLogout={logout} showProfileLink />
       </div>
 
-      {loading ? <p>Загрузка...</p> : null}
-      {error ? <p style={{ color: 'crimson' }}>{error}</p> : null}
+      <div className="surface">
+        {loading ? <p className="muted">Загрузка...</p> : null}
+        {error ? <p className="error-text">{error}</p> : null}
 
-      {me ? (
-        <pre style={{ padding: 12, borderRadius: 8, background: '#f6f6f6', overflow: 'auto' }}>
-          {JSON.stringify(me, null, 2)}
-        </pre>
-      ) : null}
+        {me ? <pre className="json-view">{JSON.stringify(me, null, 2)}</pre> : null}
 
-      <button
-        onClick={load}
-        style={{ marginTop: 12, padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
-      >
-        Обновить
-      </button>
+        <button onClick={load} className="btn btn-primary" style={{ marginTop: 14 }}>
+          Обновить
+        </button>
+      </div>
     </div>
   )
 }

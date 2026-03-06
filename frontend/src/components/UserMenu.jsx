@@ -17,42 +17,19 @@ export default function UserMenu({ username, onLogout, showProfileLink = true })
   }, [])
 
   return (
-    <div ref={rootRef} style={{ position: 'relative' }}>
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc', background: '#fff', minWidth: 180, textAlign: 'left' }}
-      >
+    <div ref={rootRef} className="user-menu-root">
+      <button onClick={() => setIsOpen((prev) => !prev)} className="btn btn-secondary user-menu-trigger">
         {username || 'Пользователь'}
       </button>
 
       {isOpen ? (
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            marginTop: 6,
-            width: 200,
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 8,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-            overflow: 'hidden',
-            zIndex: 10
-          }}
-        >
+        <div className="user-menu-popover">
           {showProfileLink ? (
-            <Link
-              to="/profile"
-              onClick={() => setIsOpen(false)}
-              style={{ display: 'block', padding: 10, color: '#111', textDecoration: 'none', borderBottom: '1px solid #eee' }}
-            >
+            <Link to="/profile" onClick={() => setIsOpen(false)} className="user-menu-item">
               Открыть профиль
             </Link>
           ) : null}
-          <button
-            onClick={onLogout}
-            style={{ display: 'block', width: '100%', padding: 10, border: 'none', background: '#fff', textAlign: 'left', cursor: 'pointer' }}
-          >
+          <button onClick={onLogout} className="user-menu-item">
             Выйти
           </button>
         </div>

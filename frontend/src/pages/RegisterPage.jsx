@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { formatApiError } from '../api/error.js'
 import { registerUser } from '../api/users.js'
 import { isAuthenticated } from '../auth/token.js'
-import { formatApiError } from '../api/error.js'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -33,51 +33,31 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: '40px auto', fontFamily: 'system-ui' }}>
-      <h1>Регистрация</h1>
-      <form onSubmit={onSubmit} style={{ display: 'grid', gap: 12 }}>
-        <label style={{ display: 'grid', gap: 6 }}>
-          Email
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            required
-            style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-          />
-        </label>
-        <label style={{ display: 'grid', gap: 6 }}>
-          Username
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            type="text"
-            required
-            style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-          />
-        </label>
-        <label style={{ display: 'grid', gap: 6 }}>
-          Пароль
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type="password"
-            required
-            style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-          />
-        </label>
-        {error ? <div style={{ color: 'crimson', whiteSpace: 'pre-wrap' }}>{error}</div> : null}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
-        >
-          {loading ? 'Создаём...' : 'Создать аккаунт'}
-        </button>
-      </form>
-      <p style={{ marginTop: 12 }}>
-        Уже есть аккаунт? <Link to="/login">Войти</Link>
-      </p>
+    <div className="page page-auth">
+      <div className="surface">
+        <h1 className="page-title">Регистрация</h1>
+        <form onSubmit={onSubmit} className="stack" style={{ marginTop: 14 }}>
+          <label className="field">
+            Email
+            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+          </label>
+          <label className="field">
+            Username
+            <input value={username} onChange={(e) => setUsername(e.target.value)} type="text" required />
+          </label>
+          <label className="field">
+            Пароль
+            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+          </label>
+          {error ? <div className="error-text">{error}</div> : null}
+          <button type="submit" disabled={loading} className="btn btn-primary">
+            {loading ? 'Создаём...' : 'Создать аккаунт'}
+          </button>
+        </form>
+        <p className="muted" style={{ marginTop: 12 }}>
+          Уже есть аккаунт? <Link to="/login">Войти</Link>
+        </p>
+      </div>
     </div>
   )
 }
