@@ -10,6 +10,11 @@ export async function createOperation(payload) {
   return data
 }
 
+export async function updateOperation(id, payload) {
+  const { data } = await api.patch(`/api/operations/${id}`, payload)
+  return data
+}
+
 export async function deleteOperation(id) {
   await api.delete(`/api/operations/${id}`)
 }

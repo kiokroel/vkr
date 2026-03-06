@@ -1,9 +1,35 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { createOperation, deleteOperation, listOperations } from '../api/operations.js'
+import { createOperation, deleteOperation, listOperations, updateOperation } from '../api/operations.js'
 import { formatApiError } from '../api/error.js'
+import { clearAccessToken } from '../auth/token.js'
+import { getMe } from '../api/users.js'
+import { useNavigate } from 'react-router-dom'
+import UserMenu from '../components/UserMenu.jsx'
 
-function OperationRow({ op, isOpen, onToggle, onDelete }) {
+function OperationRow({ op, isOpen, onToggle, onDelete, onUpdate }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
+  const [editDate, setEditDate] = useState(op.date ?? '')
+  const [editAmount, setEditAmount] = useState(String(op.amount ?? ''))
+  const [editType, setEditType] = useState(op.type ?? 'expense')
+  const [editDescription, setEditDescription] = useState(op.description ?? '')
+
+  async function onSubmit(e) {
+    e.preventDefault()
+    setSaveLoading(true)
+    try {
+      await onUpdate(op.id, {
+        date: editDate,
+        amount: Number(editAmount),
+        type: editType,
+        description: editDescription ? editDescription : null
+      })
+      setIsEditing(false)
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+
   const title = `${op.type === 'income' ? 'Доход' : 'Расход'}: ${op.amount}`
   const subtitle = op.description ? op.description : 'Без описания'
 
@@ -29,35 +55,110 @@ function OperationRow({ op, isOpen, onToggle, onDelete }) {
 
       {isOpen ? (
         <div style={{ padding: 12, background: '#fafafa', borderTop: '1px solid #eee' }}>
-          <div style={{ display: 'grid', gap: 6 }}>
-            <div>
-              <b>ID</b>: {op.id}
-            </div>
-            <div>
-              <b>Дата</b>: {op.date}
-            </div>
-            <div>
-              <b>Тип</b>: {op.type}
-            </div>
-            <div>
-              <b>Сумма</b>: {op.amount}
-            </div>
-            <div>
-              <b>Категория</b>: {op.category_id ? op.category_id : '—'}
-            </div>
-            <div>
-              <b>Описание</b>: {op.description ? op.description : '—'}
-            </div>
-          </div>
+          {isEditing ? (
+            <form onSubmit={onSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <label style={{ display: 'grid', gap: 6 }}>
+                Дата
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  required
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+                />
+              </label>
+              <label style={{ display: 'grid', gap: 6 }}>
+                Сумма
+                <input
+                  type="number"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  required
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+                />
+              </label>
+              <label style={{ display: 'grid', gap: 6 }}>
+                Тип
+                <select
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value)}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+                >
+                  <option value="expense">Расход</option>
+                  <option value="income">Доход</option>
+                </select>
+              </label>
+              <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
+                Описание
+                <input
+                  type="text"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+                />
+              </label>
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 8, gridColumn: '1 / -1' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false)
+                    setEditDate(op.date ?? '')
+                    setEditAmount(String(op.amount ?? ''))
+                    setEditType(op.type ?? 'expense')
+                    setEditDescription(op.description ?? '')
+                  }}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc', background: '#fff' }}
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveLoading}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
+                >
+                  {saveLoading ? 'Сохраняем...' : 'Сохранить'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <div>
+                  <b>ID</b>: {op.id}
+                </div>
+                <div>
+                  <b>Дата</b>: {op.date}
+                </div>
+                <div>
+                  <b>Тип</b>: {op.type}
+                </div>
+                <div>
+                  <b>Сумма</b>: {op.amount}
+                </div>
+                <div>
+                  <b>Категория</b>: {op.category_id ? op.category_id : '—'}
+                </div>
+                <div>
+                  <b>Описание</b>: {op.description ? op.description : '—'}
+                </div>
+              </div>
 
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={onDelete}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #c00', background: '#fff', color: '#c00' }}
-            >
-              Удалить
-            </button>
-          </div>
+              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#fff', color: '#111' }}
+                >
+                  Редактировать
+                </button>
+                <button
+                  onClick={onDelete}
+                  style={{ padding: 10, borderRadius: 8, border: '1px solid #c00', background: '#fff', color: '#c00' }}
+                >
+                  Удалить
+                </button>
+              </div>
+            </>
+          )}
         </div>
       ) : null}
     </div>
@@ -65,10 +166,14 @@ function OperationRow({ op, isOpen, onToggle, onDelete }) {
 }
 
 export default function OperationsPage() {
+  const navigate = useNavigate()
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [openId, setOpenId] = useState(null)
+  const [me, setMe] = useState(null)
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   const [createDate, setCreateDate] = useState('')
   const [createAmount, setCreateAmount] = useState('')
@@ -105,8 +210,18 @@ export default function OperationsPage() {
     }
   }
 
+  async function loadMe() {
+    try {
+      const data = await getMe()
+      setMe(data)
+    } catch {
+      setMe(null)
+    }
+  }
+
   useEffect(() => {
     load()
+    loadMe()
   }, [])
 
   async function onCreate(e) {
@@ -122,14 +237,28 @@ export default function OperationsPage() {
         category_id: null
       })
 
+      setCreateDate('')
       setCreateAmount('')
+      setCreateType('expense')
       setCreateDescription('')
+      setShowCreateForm(false)
 
       await load()
     } catch (err) {
       setError(formatApiError(err))
     } finally {
       setCreateLoading(false)
+    }
+  }
+
+  async function onUpdateOperation(id, payload) {
+    setError('')
+    try {
+      await updateOperation(id, payload)
+      await load()
+    } catch (err) {
+      setError(formatApiError(err))
+      throw err
     }
   }
 
@@ -144,11 +273,16 @@ export default function OperationsPage() {
     }
   }
 
+  function logout() {
+    clearAccessToken()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <div style={{ maxWidth: 900, margin: '40px auto', fontFamily: 'system-ui' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <h1 style={{ margin: 0 }}>Операции</h1>
-        <Link to="/profile">Профиль</Link>
+        <UserMenu username={me?.username} onLogout={logout} showProfileLink />
       </div>
 
       <div
@@ -160,60 +294,75 @@ export default function OperationsPage() {
           background: '#fff'
         }}
       >
-        <h2 style={{ margin: '0 0 12px 0', fontSize: 18 }}>Добавить операцию</h2>
-        <form onSubmit={onCreate} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <label style={{ display: 'grid', gap: 6 }}>
-            Дата
-            <input
-              type="date"
-              value={createDate}
-              onChange={(e) => setCreateDate(e.target.value)}
-              required
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-            />
-          </label>
-          <label style={{ display: 'grid', gap: 6 }}>
-            Сумма
-            <input
-              type="number"
-              value={createAmount}
-              onChange={(e) => setCreateAmount(e.target.value)}
-              required
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-            />
-          </label>
-          <label style={{ display: 'grid', gap: 6 }}>
-            Тип
-            <select
-              value={createType}
-              onChange={(e) => setCreateType(e.target.value)}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-            >
-              <option value="expense">Расход</option>
-              <option value="income">Доход</option>
-            </select>
-          </label>
+        <button
+          onClick={() => setShowCreateForm((prev) => !prev)}
+          style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
+        >
+          {showCreateForm ? 'Скрыть форму' : 'Добавить операцию'}
+        </button>
 
-          <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
-            Описание
-            <input
-              type="text"
-              value={createDescription}
-              onChange={(e) => setCreateDescription(e.target.value)}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-            />
-          </label>
+        {showCreateForm ? (
+          <form onSubmit={onCreate} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
+            <label style={{ display: 'grid', gap: 6 }}>
+              Дата
+              <input
+                type="date"
+                value={createDate}
+                onChange={(e) => setCreateDate(e.target.value)}
+                required
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+              />
+            </label>
+            <label style={{ display: 'grid', gap: 6 }}>
+              Сумма
+              <input
+                type="number"
+                value={createAmount}
+                onChange={(e) => setCreateAmount(e.target.value)}
+                required
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+              />
+            </label>
+            <label style={{ display: 'grid', gap: 6 }}>
+              Тип
+              <select
+                value={createType}
+                onChange={(e) => setCreateType(e.target.value)}
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+              >
+                <option value="expense">Расход</option>
+                <option value="income">Доход</option>
+              </select>
+            </label>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gridColumn: '1 / -1' }}>
-            <button
-              type="submit"
-              disabled={createLoading}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
-            >
-              {createLoading ? 'Сохраняем...' : 'Добавить'}
-            </button>
-          </div>
-        </form>
+            <label style={{ display: 'grid', gap: 6, gridColumn: '1 / -1' }}>
+              Описание
+              <input
+                type="text"
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
+              />
+            </label>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, gridColumn: '1 / -1' }}>
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(false)}
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc', background: '#fff' }}
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={createLoading}
+                style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
+              >
+                {createLoading ? 'Сохраняем...' : 'Сохранить'}
+              </button>
+            </div>
+          </form>
+        ) : null}
       </div>
 
       <div
@@ -246,11 +395,7 @@ export default function OperationsPage() {
           </label>
           <label style={{ display: 'grid', gap: 6 }}>
             Тип
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}
-            >
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc' }}>
               <option value="">Все</option>
               <option value="income">Доход</option>
               <option value="expense">Расход</option>
@@ -275,10 +420,7 @@ export default function OperationsPage() {
             />
           </label>
           <div style={{ display: 'grid', alignContent: 'end' }}>
-            <button
-              onClick={load}
-              style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}
-            >
+            <button onClick={load} style={{ padding: 10, borderRadius: 8, border: '1px solid #111', background: '#111', color: '#fff' }}>
               Применить
             </button>
           </div>
@@ -287,7 +429,6 @@ export default function OperationsPage() {
 
       {loading ? <p>Загрузка...</p> : null}
       {error ? <p style={{ color: 'crimson', whiteSpace: 'pre-wrap' }}>{error}</p> : null}
-
       {!loading && !error && items.length === 0 ? <p>Операций нет</p> : null}
 
       <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
@@ -298,6 +439,7 @@ export default function OperationsPage() {
             isOpen={openId === op.id}
             onToggle={() => setOpenId((prev) => (prev === op.id ? null : op.id))}
             onDelete={() => onDeleteOperation(op.id)}
+            onUpdate={onUpdateOperation}
           />
         ))}
       </div>

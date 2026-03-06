@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getMe } from '../api/users.js'
 import { clearAccessToken } from '../auth/token.js'
-import { Link } from 'react-router-dom'
+import UserMenu from '../components/UserMenu.jsx'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -39,9 +39,7 @@ export default function ProfilePage() {
           <h1 style={{ margin: 0 }}>Профиль</h1>
           <Link to="/operations">Операции</Link>
         </div>
-        <button onClick={logout} style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc', background: '#fff' }}>
-          Выйти
-        </button>
+        <UserMenu username={me?.username} onLogout={logout} showProfileLink />
       </div>
 
       {loading ? <p>Загрузка...</p> : null}
