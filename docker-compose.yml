@@ -1,0 +1,116 @@
+services:
+  db_main:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      POSTGRES_USER: ${BACKEND_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BACKEND_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BACKEND_POSTGRES_DB}
+    volumes:
+      - db_main_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BACKEND_POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  db_users:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+      POSTGRES_USER: ${USERS_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${USERS_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${USERS_POSTGRES_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - db_users_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USERS_POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    depends_on:
+      db_main:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  users-api:
+    build: ./users_api
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    depends_on:
+      db_users:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+
+  api-gateway:
+    image: caddy:2-alpine
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      users-api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      api-gateway:
+        condition: service_started
+
+volumes:
+  db_main_data:
+  db_users_data:
+  caddy_data:
+  caddy_config:
+  
+networks:
+  app-network:
+    driver: bridge

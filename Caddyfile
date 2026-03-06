@@ -1,0 +1,29 @@
+:80 {
+	# ========== Users API ==========
+	handle /api/users/* {
+		reverse_proxy users-api:8000
+	}
+
+	# Swagger для Users API
+	handle /users/docs* {
+		reverse_proxy users-api:8000
+	}
+
+	handle /users/openapi.json {
+		reverse_proxy users-api:8000
+	}
+
+	# ========== Backend API ==========
+	handle /health* {
+		reverse_proxy backend:8000
+	}
+
+	handle /api* {
+		reverse_proxy backend:8000
+	}
+
+	# Frontend
+	handle {
+		reverse_proxy frontend:80
+	}
+}
