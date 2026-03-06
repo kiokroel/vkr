@@ -214,6 +214,40 @@ select:focus {
   overflow: auto;
 }
 
+.profile-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-item {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.profile-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.profile-value {
+  margin-top: 4px;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--text-main);
+  word-break: break-word;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .operations-list {
   display: grid;
   gap: 10px;

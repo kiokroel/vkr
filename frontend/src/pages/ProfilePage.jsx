@@ -4,6 +4,15 @@ import { getMe } from '../api/users.js'
 import { clearAccessToken } from '../auth/token.js'
 import UserMenu from '../components/UserMenu.jsx'
 
+function ProfileItem({ label, value }) {
+  return (
+    <div className="profile-item">
+      <div className="profile-label">{label}</div>
+      <div className="profile-value">{value || '—'}</div>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate()
   const [me, setMe] = useState(null)
@@ -35,21 +44,29 @@ export default function ProfilePage() {
   return (
     <div className="page">
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 className="page-title">Профиль</h1>
-          <Link to="/operations">Операции</Link>
+        <h1 className="page-title">Профиль</h1>
+        <div className="header-actions">
+          <Link to="/operations" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+            Операции
+          </Link>
+          <UserMenu username={me?.username} onLogout={logout} showProfileLink />
         </div>
-        <UserMenu username={me?.username} onLogout={logout} showProfileLink />
       </div>
 
       <div className="surface">
         {loading ? <p className="muted">Загрузка...</p> : null}
         {error ? <p className="error-text">{error}</p> : null}
 
-        {me ? <pre className="json-view">{JSON.stringify(me, null, 2)}</pre> : null}
+        {me ? (
+          <div className="profile-grid">
+            <ProfileItem label="Имя пользователя" value={me.username} />
+            <ProfileItem label="Email" value={me.email} />
+            <ProfileItem label="ID пользователя" value={me.id} />
+          </div>
+        ) : null}
 
-        <button onClick={load} className="btn btn-primary" style={{ marginTop: 14 }}>
-          Обновить
+        <button onClick={load} className="btn btn-secondary" style={{ marginTop: 14 }}>
+          Обновить данные
         </button>
       </div>
     </div>
