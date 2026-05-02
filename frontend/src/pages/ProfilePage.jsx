@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getMe } from '../api/users.js'
-import { clearAccessToken } from '../auth/token.js'
-import UserMenu from '../components/UserMenu.jsx'
 
 function ProfileItem({ label, value }) {
   return (
@@ -36,21 +34,10 @@ export default function ProfilePage() {
     load()
   }, [])
 
-  function logout() {
-    clearAccessToken()
-    navigate('/login', { replace: true })
-  }
-
   return (
     <div className="page">
       <div className="page-header">
         <h1 className="page-title">Профиль</h1>
-        <div className="header-actions">
-          <Link to="/operations" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-            Операции
-          </Link>
-          <UserMenu username={me?.username} onLogout={logout} showProfileLink />
-        </div>
       </div>
 
       <div className="surface">
