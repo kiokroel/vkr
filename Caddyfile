@@ -13,6 +13,11 @@
 		reverse_proxy users-api:8000
 	}
 
+	# ========== Analytics API ==========
+	handle /api/analytics/* {
+		reverse_proxy analytics-service:8000
+	}
+
 	# ========== Backend API ==========
 	handle /health* {
 		reverse_proxy backend:8000

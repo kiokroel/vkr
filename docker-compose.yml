@@ -61,6 +61,33 @@ services:
     ports:
       - "8000:8000"
 
+  analytics-service:
+    build: ./analytics_service
+    env_file:
+      - .env
+    environment:
+      ANALYTICS_POSTGRES_USER: ${BACKEND_POSTGRES_USER}
+      ANALYTICS_POSTGRES_PASSWORD: ${BACKEND_POSTGRES_PASSWORD}
+      ANALYTICS_POSTGRES_DB: ${BACKEND_POSTGRES_DB}
+      ANALYTICS_POSTGRES_ADDRESS: db_main
+      ANALYTICS_POSTGRES_PORT: 5432
+      ANALYTICS_MODEL_DIR: /app/data/models
+      ANALYTICS_TRAIN_ON_STARTUP: "true"
+      ANALYTICS_DAILY_TRAIN_HOUR: 0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    depends_on:
+      db_main:
+        condition: service_healthy
+    volumes:
+      - analytics_models:/app/data/models
+
   users-api:
     build: ./users_api
     env_file:
@@ -88,6 +115,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+      analytics-service:
+        condition: service_healthy
       users-api:
         condition: service_healthy
     ports:
@@ -110,6 +139,7 @@ volumes:
   db_users_data:
   caddy_data:
   caddy_config:
+  analytics_models:
   
 networks:
   app-network:
