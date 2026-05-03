@@ -20,7 +20,10 @@ export default function AppLayout() {
 
   return (
     <>
-      <AppHeader username={me?.username} />
+      <AppHeader 
+        username={me?.username} 
+        isAdmin={me?.is_admin} 
+      />
       <Outlet />
     </>
   )

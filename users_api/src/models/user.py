@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, String, func
+from sqlalchemy import Boolean, Column, DateTime, String, func
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.core.database import Base
@@ -16,5 +16,6 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     bio = Column(String(500), nullable=True)
     image_url = Column(String(500), nullable=True)
+    is_admin = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

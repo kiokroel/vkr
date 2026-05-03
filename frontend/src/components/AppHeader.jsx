@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { clearAccessToken } from '../auth/token.js'
 import UserMenu from './UserMenu.jsx'
 
-export default function AppHeader({ username }) {
+export default function AppHeader({ username, isAdmin }) {
   const navigate = useNavigate()
 
   function logout() {
@@ -26,6 +26,15 @@ export default function AppHeader({ username }) {
           <NavLink to="/charts" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
             Диаграммы
           </NavLink>
+          {isAdmin && (
+            <NavLink 
+              to="/admin" 
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+              style={{ color: 'var(--primary)', fontWeight: 600 }}
+            >
+              Админка
+            </NavLink>
+          )}
         </nav>
       </div>
       <UserMenu username={username} onLogout={logout} showProfileLink />

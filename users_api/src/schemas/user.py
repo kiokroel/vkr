@@ -40,6 +40,7 @@ class UserResponse(UserBase):
     """Схема ответа пользователя"""
 
     id: UUID
+    is_admin: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
 

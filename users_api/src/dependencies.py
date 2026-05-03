@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
 from src.core.security import security_service
+from src.models.user import User
 from src.repositories.user import UserRepository
 
 security = HTTPBearer()
@@ -39,3 +40,15 @@ async def get_current_user(
         )
 
     return user
+
+
+async def get_current_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Получить текущего администратора"""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Требуются права администратора"
+        )
+    return current_user
